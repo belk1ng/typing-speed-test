@@ -1,0 +1,71 @@
+html {
+  scroll-behavior: smooth;
+  height: 100%;
+  font-size: clamp(0.75rem, 0.32vw + 0.686rem, 1rem);
+  line-height: clamp(1.02rem, 0.614vw + 0.897rem, 1.5rem);
+}
+
+body {
+  box-sizing: border-box;
+  min-height: 100%;
+  background-color: var(--bg-color);
+
+  font-family: "Montserrat", sans-serif;
+  font-optical-sizing: auto;
+
+  -webkit-font-smoothing: antialiased;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: inherit;
+  margin: 0;
+  padding: 0;
+}
+
+:where(fieldset[class]) {
+  border: none;
+}
+
+:where(ul[class]) {
+  list-style: none;
+}
+
+img {
+  display: block;
+  max-width: 100%;
+}
+
+input,
+textarea,
+select,
+button {
+  font: inherit;
+}
+
+svg *[fill] {
+  fill: currentcolor;
+}
+
+svg *[stroke] {
+  stroke: currentcolor;
+}
+
+svg * {
+  transition-property: fill, stroke;
+}
+
+*:focus-visible {
+  outline: 2px dashed var(--primary);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+  }
+}
