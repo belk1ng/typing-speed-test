@@ -4,6 +4,7 @@ import TestLetter, { type TestLetterProps } from "./components/TestLetter.vue";
 import { WORDS } from "./constants/words.ts";
 import RestartTest from "./components/RestartTest.vue";
 import TestTooltip from "./components/TestTooltip.vue";
+import TestTimer from "./components/TestTimer.vue";
 
 const initialValue = WORDS.join(" ");
 
@@ -14,10 +15,15 @@ const possibleToType = computed(() => !!inputValue.value.length);
 const showTooltip = computed(() => letters.value.length === 0);
 
 const inputRef = ref();
+const timerRef = ref();
 
 const onInput = (event: Event) => {
   if (!possibleToType.value) {
     event.preventDefault();
+  }
+
+  if (letters.value.length === 0) {
+    timerRef.value.onStartTimer();
   }
 
   const pressedLetter = (event as InputEvent).data;
@@ -50,6 +56,7 @@ const onKeyDown = (event: KeyboardEvent) => {
 const onRestartTest = () => {
   letters.value = [];
   inputValue.value = initialValue;
+  timerRef.value.onResetTimer();
 };
 
 onUpdated(() => {
@@ -62,6 +69,8 @@ onUpdated(() => {
     <section class="test__container">
       <h1 class="test__title">Typing speed test</h1>
       <h2 class="test__subtitle">Test your typing skills</h2>
+
+      <TestTimer ref="timerRef" />
 
       <div class="test__trainer">
         <div class="test__letters">
@@ -113,6 +122,10 @@ onUpdated(() => {
     calc(50% - 650px) 0,
     calc(50% + 650px) 0;
   background-repeat: repeat-y;
+
+  ::selection {
+    background-color: #ffd000;
+  }
 
   &__container {
     width: 80%;
