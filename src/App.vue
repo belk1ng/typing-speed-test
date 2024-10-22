@@ -1,15 +1,18 @@
 <script setup lang="ts">
-import { onMounted, onUpdated, ref } from "vue";
-import TestLetter, { type TestLetterProps } from "./components/TestLetter.vue";
+import { onMounted, ref } from "vue";
+import TrainerLetter, {
+  type TrainerLetterProps,
+} from "./components/TrainerLetter.vue";
 import { WORDS } from "./constants/words.ts";
-import RestartTest from "./components/RestartTest.vue";
-import TestTooltip from "./components/TestTooltip.vue";
-import TestTimer from "./components/TestTimer.vue";
+import TrainerRestart from "./components/TrainerRestart.vue";
+import TrainerTooltip from "./components/TrainerTooltip.vue";
+import TrainerTimer from "./components/TrainerTimer.vue";
+import TrainerInput from "./components/TrainerInput.vue";
 
 const initialValue = WORDS.slice(0, 100).join(" ");
 
 const inputValue = ref("");
-const pressedLetters = ref<TestLetterProps[]>([]);
+const pressedLetters = ref<TrainerLetterProps[]>([]);
 
 const testStarted = ref(false);
 
@@ -34,10 +37,6 @@ const onRestartTest = () => {
 onMounted(() => {
   trainerInputNode.value?.focus();
   inputValue.value = initialValue;
-});
-
-onUpdated(() => {
-  trainerInputNode.value?.setSelectionRange(0, 0);
 });
 
 const onKeyDown = (event: KeyboardEvent) => {
@@ -75,8 +74,7 @@ const onBeforeInput = (_event: Event) => {
   }
 };
 
-const onInput = (event: Event) => {
-  const pressedLetter = (event as InputEvent).data;
+const onInput = (pressedLetter: string | null) => {
   const validLetter = inputValue.value[0];
 
   pressedLetters.value.push({
@@ -94,11 +92,11 @@ const onInput = (event: Event) => {
       <h1 class="test__title">Typing speed test</h1>
       <h2 class="test__subtitle">Test your typing skills</h2>
 
-      <TestTimer :seconds="10" ref="timerComponent" @timeout="onTestTimeout" />
+      <TrainerTimer ref="timerComponent" @timeout="onTestTimeout" />
 
       <div class="test__trainer">
         <div class="test__letters">
-          <TestLetter
+          <TrainerLetter
             v-for="(letter, index) of pressedLetters"
             :key="letter.value + index"
             :value="letter.value"
@@ -107,24 +105,21 @@ const onInput = (event: Event) => {
           />
         </div>
 
-        <input
-          ref="trainerInputNode"
-          autocomplete="off"
+        <TrainerInput
+          class="test__field"
           :value="inputValue"
           @input="onInput"
           @beforeinput="onBeforeInput"
           @keydown="onKeyDown"
-          @paste.prevent=""
-          @drop.prevent=""
-          type="text"
-          class="test__field"
         />
 
-        <TestTooltip
+        <TrainerTooltip
           v-if="!testStarted && !pressedLetters.length"
           class="test__tooltip"
-        />
-        <RestartTest
+        >
+          Start typing
+        </TrainerTooltip>
+        <TrainerRestart
           class="test__restart"
           :visible="!testStarted && !!pressedLetters.length"
           @restart="onRestartTest"
@@ -199,10 +194,6 @@ const onInput = (event: Event) => {
     max-width: 50%;
     width: 100%;
     font-weight: 600;
-  }
-
-  &__field {
-    border: 0;
   }
 
   &__letters {

@@ -1,25 +1,25 @@
 <script setup lang="ts">
-export interface TestLetterProps {
+export interface TrainerLetterProps {
   value: string;
   valid: boolean;
   correctValue: string;
 }
 
-defineProps<TestLetterProps>();
+defineProps<TrainerLetterProps>();
 </script>
 
 <template>
   <span v-if="value === ' ' && correctValue === ' '">&nbsp;</span>
-  <span class="test-letter" v-else-if="value === ' '">
+  <span class="letter" v-else-if="value === ' '">
     {{ correctValue }}
   </span>
-  <span v-else class="test-letter" :class="{ 'test-letter--valid': valid }">
+  <span v-else class="letter" :class="{ 'letter--valid': valid }">
     {{ value }}
   </span>
 </template>
 
 <style scoped lang="scss">
-.test-letter {
+.letter {
   color: lightcoral;
 
   &--valid {

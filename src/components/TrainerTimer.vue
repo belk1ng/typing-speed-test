@@ -24,6 +24,8 @@ const size = 106;
 const radius = size / 2 - 10;
 const circumference = 2 * Math.PI * radius;
 
+const animationDuration = `${props.seconds}s`;
+
 const time = ref(props.seconds);
 const interval = ref<number | undefined>();
 
@@ -65,7 +67,6 @@ defineExpose<Expose>({
         class="timer__circle"
         :class="{ 'timer__circle--active': !!interval }"
         :cx="size / 2"
-        :style="{ animationDuration: `${seconds}s` }"
         :cy="size / 2"
         :r="radius"
         fill="#fff"
@@ -125,7 +126,7 @@ defineExpose<Expose>({
     stroke: #ffd000;
 
     &--active {
-      animation: animate-stroke linear forwards;
+      animation: animate-stroke v-bind(animationDuration) linear forwards;
     }
   }
 }

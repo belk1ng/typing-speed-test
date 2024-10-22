@@ -1,7 +1,9 @@
 <script setup lang="ts"></script>
 
 <template>
-  <div class="test-tooltip">Start typing</div>
+  <div class="tooltip">
+    <slot />
+  </div>
 </template>
 <style scoped lang="scss">
 @keyframes pulse {
@@ -16,7 +18,7 @@
   }
 }
 
-.test-tooltip {
+.tooltip {
   position: relative;
   z-index: 1;
 
