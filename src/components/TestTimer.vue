@@ -10,9 +10,15 @@ interface Expose {
   onResetTimer: () => void;
 }
 
+interface Emits {
+  (e: "timeout"): void;
+}
+
 const props = withDefaults(defineProps<Props>(), {
   seconds: 60,
 });
+
+const emit = defineEmits<Emits>();
 
 const size = 106;
 const radius = size / 2 - 10;
@@ -26,6 +32,7 @@ const onStartTimer = () => {
     if (time.value > 0) {
       time.value--;
     } else {
+      emit("timeout");
       clearInterval(interval.value);
     }
   }, 1000);

@@ -1,72 +1,91 @@
 <script setup lang="ts">
-import { computed, onMounted, onUpdated, ref } from "vue";
+import { onMounted, onUpdated, ref } from "vue";
 import TestLetter, { type TestLetterProps } from "./components/TestLetter.vue";
 import { WORDS } from "./constants/words.ts";
 import RestartTest from "./components/RestartTest.vue";
 import TestTooltip from "./components/TestTooltip.vue";
 import TestTimer from "./components/TestTimer.vue";
 
-const initialValue = WORDS.join(" ");
+const initialValue = WORDS.slice(0, 100).join(" ");
 
 const inputValue = ref("");
-const letters = ref<TestLetterProps[]>([]);
+const pressedLetters = ref<TestLetterProps[]>([]);
 
-const possibleToType = computed(() => !!inputValue.value.length);
-const showTooltip = computed(() => letters.value.length === 0);
+const testStarted = ref(false);
 
-const inputRef = ref<HTMLInputElement>();
-const timerRef = ref();
+const trainerInputNode = ref<HTMLInputElement>();
+const timerComponent = ref();
 
-const onInput = (event: Event) => {
-  if (!possibleToType.value) {
+const onStartTest = () => {
+  testStarted.value = true;
+  timerComponent.value.onStartTimer();
+};
+
+const onTestTimeout = () => {
+  testStarted.value = false;
+};
+
+const onRestartTest = () => {
+  pressedLetters.value = [];
+  inputValue.value = initialValue;
+  timerComponent.value.onResetTimer();
+};
+
+onMounted(() => {
+  trainerInputNode.value?.focus();
+  inputValue.value = initialValue;
+});
+
+onUpdated(() => {
+  trainerInputNode.value?.setSelectionRange(0, 0);
+});
+
+const onKeyDown = (event: KeyboardEvent) => {
+  const isForbidden =
+    event.key === "Delete" ||
+    event.key === "Escape" ||
+    event.key === "CapsLock" ||
+    event.key === "Tab" ||
+    event.key === "Shift" ||
+    event.altKey ||
+    event.ctrlKey ||
+    event.metaKey;
+  const isTrainerInInitialState =
+    !testStarted.value && !isForbidden && pressedLetters.value.length === 0;
+  const isInvalidCharacterPressed = testStarted.value && isForbidden;
+
+  if (isTrainerInInitialState) {
+    onStartTest();
+  } else if (isInvalidCharacterPressed || !testStarted.value) {
     event.preventDefault();
   }
+};
 
-  if (letters.value.length === 0) {
-    timerRef.value.onStartTimer();
+const onBeforeInput = (_event: Event) => {
+  const event = _event as InputEvent;
+
+  const isBackspacePressed = event.inputType === "deleteContentBackward";
+
+  if (!event.data && !isBackspacePressed) {
+    event.preventDefault();
+    return;
+  } else if (isBackspacePressed) {
+    const char = pressedLetters.value.pop();
+    inputValue.value = char!.correctValue + inputValue.value;
   }
+};
 
+const onInput = (event: Event) => {
   const pressedLetter = (event as InputEvent).data;
   const validLetter = inputValue.value[0];
 
-  letters.value.push({
+  pressedLetters.value.push({
     value: pressedLetter ?? "",
     valid: validLetter === pressedLetter,
     correctValue: validLetter,
   });
   inputValue.value = inputValue.value.substring(1, inputValue.value.length);
 };
-
-const onKeyDown = (event: KeyboardEvent) => {
-  if (
-    !possibleToType.value ||
-    event.key === "Backspace" ||
-    event.key === "Tab" ||
-    event.key === "Delete"
-  ) {
-    event.preventDefault();
-  }
-
-  if (event.key === "Backspace") {
-    const char = letters.value.pop();
-    inputValue.value = char!.correctValue + inputValue.value;
-  }
-};
-
-const onRestartTest = () => {
-  letters.value = [];
-  inputValue.value = initialValue;
-  timerRef.value.onResetTimer();
-};
-
-onMounted(() => {
-  inputRef.value?.focus();
-  inputValue.value = initialValue;
-});
-
-onUpdated(() => {
-  inputRef.value?.setSelectionRange(0, 0);
-});
 </script>
 
 <template>
@@ -75,12 +94,12 @@ onUpdated(() => {
       <h1 class="test__title">Typing speed test</h1>
       <h2 class="test__subtitle">Test your typing skills</h2>
 
-      <TestTimer ref="timerRef" />
+      <TestTimer :seconds="10" ref="timerComponent" @timeout="onTestTimeout" />
 
       <div class="test__trainer">
         <div class="test__letters">
           <TestLetter
-            v-for="(letter, index) of letters"
+            v-for="(letter, index) of pressedLetters"
             :key="letter.value + index"
             :value="letter.value"
             :correct-value="letter.correctValue"
@@ -89,10 +108,11 @@ onUpdated(() => {
         </div>
 
         <input
-          ref="inputRef"
+          ref="trainerInputNode"
           autocomplete="off"
           :value="inputValue"
           @input="onInput"
+          @beforeinput="onBeforeInput"
           @keydown="onKeyDown"
           @paste.prevent=""
           @drop.prevent=""
@@ -100,10 +120,13 @@ onUpdated(() => {
           class="test__field"
         />
 
-        <TestTooltip v-if="showTooltip" class="test__tooltip" />
+        <TestTooltip
+          v-if="!testStarted && !pressedLetters.length"
+          class="test__tooltip"
+        />
         <RestartTest
           class="test__restart"
-          :visible="!possibleToType"
+          :visible="!testStarted && !!pressedLetters.length"
           @restart="onRestartTest"
         />
       </div>
@@ -152,6 +175,7 @@ onUpdated(() => {
     font-weight: 700;
     line-height: 1.05;
     letter-spacing: -0.03em;
+    margin-bottom: 1.5rem;
   }
 
   &__trainer {
