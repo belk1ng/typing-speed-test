@@ -3,6 +3,7 @@ import { computed, onUpdated, ref } from "vue";
 import TestLetter, { type TestLetterProps } from "./components/TestLetter.vue";
 import { WORDS } from "./constants/words.ts";
 import RestartTest from "./components/RestartTest.vue";
+import TestTooltip from "./components/TestTooltip.vue";
 
 const initialValue = WORDS.join(" ");
 
@@ -10,6 +11,7 @@ const inputValue = ref(initialValue);
 const letters = ref<TestLetterProps[]>([]);
 
 const possibleToType = computed(() => !!inputValue.value.length);
+const showTooltip = computed(() => letters.value.length === 0);
 
 const inputRef = ref();
 
@@ -30,15 +32,18 @@ const onInput = (event: Event) => {
 };
 
 const onKeyDown = (event: KeyboardEvent) => {
-  if (!possibleToType.value) {
+  if (
+    !possibleToType.value ||
+    event.key === "Backspace" ||
+    event.key === "Tab" ||
+    event.key === "Delete"
+  ) {
     event.preventDefault();
   }
 
-  if (event.key === "Backspace" && letters.value.length) {
+  if (event.key === "Backspace") {
     const char = letters.value.pop();
     inputValue.value = char!.correctValue + inputValue.value;
-  } else if (event.key === "Tab") {
-    event.preventDefault();
   }
 };
 
@@ -55,6 +60,9 @@ onUpdated(() => {
 <template>
   <main class="test">
     <section class="test__container">
+      <h1 class="test__title">Typing speed test</h1>
+      <h2 class="test__subtitle">Test your typing skills</h2>
+
       <div class="test__trainer">
         <div class="test__letters">
           <TestLetter
@@ -68,19 +76,23 @@ onUpdated(() => {
 
         <input
           ref="inputRef"
+          autocomplete="off"
+          :value="inputValue"
           @input="onInput"
           @keydown="onKeyDown"
-          :value="inputValue"
+          @paste.prevent=""
+          @drop.prevent=""
           type="text"
           class="test__field"
         />
-      </div>
 
-      <RestartTest
-        class="test__restart"
-        :visible="!possibleToType"
-        @restart="onRestartTest"
-      />
+        <TestTooltip v-if="showTooltip" class="test__tooltip" />
+        <RestartTest
+          class="test__restart"
+          :visible="!possibleToType"
+          @restart="onRestartTest"
+        />
+      </div>
     </section>
   </main>
 </template>
@@ -103,19 +115,35 @@ onUpdated(() => {
   background-repeat: repeat-y;
 
   &__container {
-    position: relative;
     width: 80%;
     margin: 0 auto;
+    text-align: center;
+  }
+
+  &__title {
+    text-transform: uppercase;
+    font-size: 1rem;
+    letter-spacing: 0.1rem;
+    font-weight: 400;
+    color: #4a4a56;
+    margin-bottom: 0.5rem;
+  }
+
+  &__subtitle {
+    font-size: 45px;
+    font-weight: 700;
+    line-height: 1.05;
+    letter-spacing: -0.03em;
   }
 
   &__trainer {
     font-size: 2.5rem;
-    font-weight: 600;
 
+    position: relative;
     display: flex;
     align-items: center;
     height: 140px;
-    overflow: hidden;
+    margin-block: 5rem;
     border-radius: 0.5rem;
 
     background-color: #fff;
@@ -128,6 +156,7 @@ onUpdated(() => {
   &__field {
     max-width: 50%;
     width: 100%;
+    font-weight: 600;
   }
 
   &__field {
@@ -138,12 +167,19 @@ onUpdated(() => {
     display: flex;
     justify-content: flex-end;
     align-items: center;
+    overflow: hidden;
+  }
+
+  &__tooltip {
+    position: absolute;
+    top: -0.5rem;
+    left: 50%;
   }
 
   &__restart {
     position: absolute;
-    bottom: 5px;
-    right: 5px;
+    bottom: 10px;
+    right: 10px;
   }
 }
 </style>

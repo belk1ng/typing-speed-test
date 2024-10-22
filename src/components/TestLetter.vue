@@ -10,7 +10,7 @@ defineProps<TestLetterProps>();
 
 <template>
   <span v-if="value === ' ' && correctValue === ' '">&nbsp;</span>
-  <span class="test-letter miss" v-else-if="value === ' '">
+  <span class="test-letter" v-else-if="value === ' '">
     {{ correctValue }}
   </span>
   <span v-else class="test-letter" :class="{ 'test-letter--valid': valid }">
