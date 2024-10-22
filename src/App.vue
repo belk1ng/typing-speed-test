@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onUpdated, ref } from "vue";
+import { computed, onMounted, onUpdated, ref } from "vue";
 import TestLetter, { type TestLetterProps } from "./components/TestLetter.vue";
 import { WORDS } from "./constants/words.ts";
 import RestartTest from "./components/RestartTest.vue";
@@ -8,13 +8,13 @@ import TestTimer from "./components/TestTimer.vue";
 
 const initialValue = WORDS.join(" ");
 
-const inputValue = ref(initialValue);
+const inputValue = ref("");
 const letters = ref<TestLetterProps[]>([]);
 
 const possibleToType = computed(() => !!inputValue.value.length);
 const showTooltip = computed(() => letters.value.length === 0);
 
-const inputRef = ref();
+const inputRef = ref<HTMLInputElement>();
 const timerRef = ref();
 
 const onInput = (event: Event) => {
@@ -58,6 +58,11 @@ const onRestartTest = () => {
   inputValue.value = initialValue;
   timerRef.value.onResetTimer();
 };
+
+onMounted(() => {
+  inputRef.value?.focus();
+  inputValue.value = initialValue;
+});
 
 onUpdated(() => {
   inputRef.value?.setSelectionRange(0, 0);
