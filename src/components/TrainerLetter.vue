@@ -1,7 +1,6 @@
 <script setup lang="ts">
 export interface TrainerLetterProps {
   value: string;
-  valid: boolean;
   correctValue: string;
 }
 
@@ -13,7 +12,11 @@ defineProps<TrainerLetterProps>();
   <span class="letter" v-else-if="value === ' '">
     {{ correctValue }}
   </span>
-  <span v-else class="letter" :class="{ 'letter--valid': valid }">
+  <span
+    v-else
+    class="letter"
+    :class="{ 'letter--valid': value === correctValue }"
+  >
     {{ value }}
   </span>
 </template>

@@ -60,9 +60,7 @@ const onKeyDown = (event: KeyboardEvent) => {
   }
 };
 
-const onBeforeInput = (_event: Event) => {
-  const event = _event as InputEvent;
-
+const onBeforeInput = (event: InputEvent) => {
   const isBackspacePressed = event.inputType === "deleteContentBackward";
 
   if (!event.data && !isBackspacePressed) {
@@ -79,7 +77,6 @@ const onInput = (pressedLetter: string | null) => {
 
   pressedLetters.value.push({
     value: pressedLetter ?? "",
-    valid: validLetter === pressedLetter,
     correctValue: validLetter,
   });
   inputValue.value = inputValue.value.substring(1, inputValue.value.length);
@@ -101,7 +98,6 @@ const onInput = (pressedLetter: string | null) => {
             :key="letter.value + index"
             :value="letter.value"
             :correct-value="letter.correctValue"
-            :valid="letter.valid"
           />
         </div>
 
