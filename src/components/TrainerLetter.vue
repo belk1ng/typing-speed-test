@@ -10,7 +10,7 @@ defineProps<TrainerLetterProps>();
 <template>
   <span v-if="value === ' ' && correctValue === ' '">&nbsp;</span>
   <span class="letter" v-else-if="value === ' '">
-    {{ correctValue }}
+    {{ "_" }}
   </span>
   <span
     v-else

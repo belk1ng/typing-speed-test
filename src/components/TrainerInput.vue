@@ -18,7 +18,7 @@ const emit = defineEmits<Emits>();
 const inputNode = ref<HTMLInputElement>();
 
 onMounted(() => {
-  inputNode.value?.focus();
+  inputNode.value?.setSelectionRange(0, 0);
 });
 
 onUpdated(() => {

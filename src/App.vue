@@ -1,22 +1,35 @@
 <script setup lang="ts">
-import { onMounted, ref } from "vue";
+import { onMounted, ref, watchEffect } from "vue";
 import TrainerLetter, {
   type TrainerLetterProps,
 } from "./components/TrainerLetter.vue";
-import { WORDS } from "./constants/words.ts";
 import TrainerRestart from "./components/TrainerRestart.vue";
 import TrainerTooltip from "./components/TrainerTooltip.vue";
 import TrainerTimer from "./components/TrainerTimer.vue";
 import TrainerInput from "./components/TrainerInput.vue";
+import { generateTypingWords } from "./utils";
 
-const initialValue = WORDS.slice(0, 100).join(" ");
+const initialValue = generateTypingWords(100).join(" ");
 
 const inputValue = ref("");
 const pressedLetters = ref<TrainerLetterProps[]>([]);
 
+const keyDelta = ref(0);
+
+watchEffect(() => {
+  if (pressedLetters.value.length >= 110) {
+    const delta = 10;
+    pressedLetters.value.splice(0, delta);
+    keyDelta.value += delta;
+  }
+
+  if (inputValue.value.length <= 150) {
+    inputValue.value = inputValue.value + generateTypingWords(100).join(" ");
+  }
+});
+
 const testStarted = ref(false);
 
-const trainerInputNode = ref<HTMLInputElement>();
 const timerComponent = ref();
 
 const onStartTest = () => {
@@ -35,7 +48,6 @@ const onRestartTest = () => {
 };
 
 onMounted(() => {
-  trainerInputNode.value?.focus();
   inputValue.value = initialValue;
 });
 
@@ -95,7 +107,7 @@ const onInput = (pressedLetter: string | null) => {
         <div class="test__letters">
           <TrainerLetter
             v-for="(letter, index) of pressedLetters"
-            :key="letter.value + index"
+            :key="keyDelta + index + letter.value"
             :value="letter.value"
             :correct-value="letter.correctValue"
           />
@@ -119,6 +131,7 @@ const onInput = (pressedLetter: string | null) => {
           class="test__restart"
           :visible="!testStarted && !!pressedLetters.length"
           @restart="onRestartTest"
+          restart-key="Tab"
         />
       </div>
     </section>
