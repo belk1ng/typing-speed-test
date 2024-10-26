@@ -10,6 +10,12 @@ import TrainerInput from "./components/TrainerInput.vue";
 import TrainerMetric from "./components/TrainerMetric.vue";
 
 const pressedLetters = ref<TrainerLetterProps[]>([]);
+const totalLettersCount = ref(0);
+const correctLettersCount = ref(0);
+const incorrectLettersCount = ref(0);
+const lettersPerMinute = ref(0);
+const wordsPerMinute = ref(0);
+const accuracy = ref(0);
 
 const timerComponent = ref();
 const inputComponent = ref();
@@ -27,6 +33,40 @@ watchEffect(() => {
   }
 });
 
+watchEffect(() => {
+  const lastPressedCharacter =
+    pressedLetters.value[pressedLetters.value.length - 1];
+
+  if (!lastPressedCharacter) {
+    return;
+  }
+
+  if (lastPressedCharacter.value === lastPressedCharacter.correctValue) {
+    correctLettersCount.value++;
+  } else {
+    incorrectLettersCount.value++;
+  }
+
+  totalLettersCount.value++;
+});
+
+const updateStatistics = () => {
+  const totalTime = timerComponent.value.getCurrentTime();
+  const totalWordsCount =
+    pressedLetters.value.filter(
+      (letter) => letter.value === " " && letter.correctValue === " "
+    ).length + 1;
+
+  const charsPerMinuteValue = (totalLettersCount.value / totalTime) * 60;
+  const wordsPerMinuteValue = (totalWordsCount / totalTime) * 60;
+  const accuracyValue =
+    (correctLettersCount.value / totalLettersCount.value) * 100;
+
+  lettersPerMinute.value = charsPerMinuteValue;
+  wordsPerMinute.value = wordsPerMinuteValue;
+  accuracy.value = accuracyValue;
+};
+
 const onStartTest = () => {
   testStarted.value = true;
   timerComponent.value.onStartTimer();
@@ -34,10 +74,17 @@ const onStartTest = () => {
 
 const onTestTimeout = () => {
   testStarted.value = false;
+  updateStatistics();
 };
 
 const onRestartTest = () => {
   pressedLetters.value = [];
+  totalLettersCount.value = 0;
+  correctLettersCount.value = 0;
+  incorrectLettersCount.value = 0;
+  lettersPerMinute.value = 0;
+  wordsPerMinute.value = 0;
+  accuracy.value = 0;
   inputComponent.value.onRestartTest();
   timerComponent.value.onResetTimer();
 };
@@ -48,6 +95,10 @@ const onRemoveLetter = () => {
 
 const onPush = (pressedLetter: TrainerLetterProps) => {
   pressedLetters.value.push(pressedLetter);
+
+  if (pressedLetter.value === " ") {
+    updateStatistics();
+  }
 };
 </script>
 
@@ -65,9 +116,9 @@ const onPush = (pressedLetter: TrainerLetterProps) => {
         />
 
         <div class="test__metrics">
-          <TrainerMetric name="words/min" :value="0" />
-          <TrainerMetric name="chars/min" :value="0" />
-          <TrainerMetric name="% accuracy" :value="0" />
+          <TrainerMetric name="words/min" :value="wordsPerMinute" />
+          <TrainerMetric name="chars/min" :value="lettersPerMinute" />
+          <TrainerMetric name="% accuracy" :value="accuracy" />
         </div>
       </div>
 

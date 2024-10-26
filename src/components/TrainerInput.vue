@@ -26,7 +26,7 @@ const textToType = ref("");
 const node = ref<HTMLInputElement>();
 
 onMounted(() => {
-  textToType.value = generateTypingWords(100);
+  textToType.value = generateTypingWords(50);
   node.value?.setSelectionRange(0, 0);
 });
 
@@ -36,7 +36,7 @@ onUpdated(() => {
 
 watchEffect(() => {
   if (textToType.value.length <= 150) {
-    textToType.value = textToType.value + generateTypingWords(100);
+    textToType.value = textToType.value + generateTypingWords(50);
   }
 });
 
