@@ -6,7 +6,7 @@ export const generateTypingWords = (wordsCount = 100) => {
     words.push(getRandomWord());
   }
 
-  return words;
+  return words.join(" ");
 };
 
 export const getRandomWord = () => {

@@ -876,7 +876,7 @@ export const WORDS = [
   "method",
   "purchase",
   "customers",
-  "active",
+  "dirty",
   "response",
   "practice",
   "hardware",

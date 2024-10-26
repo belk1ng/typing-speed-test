@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, ref, watchEffect } from "vue";
+import { ref, watchEffect } from "vue";
 import TrainerLetter, {
   type TrainerLetterProps,
 } from "./components/TrainerLetter.vue";
@@ -7,30 +7,25 @@ import TrainerRestart from "./components/TrainerRestart.vue";
 import TrainerTooltip from "./components/TrainerTooltip.vue";
 import TrainerTimer from "./components/TrainerTimer.vue";
 import TrainerInput from "./components/TrainerInput.vue";
-import { generateTypingWords } from "./utils";
+import TrainerMetric from "./components/TrainerMetric.vue";
 
-const initialValue = generateTypingWords(100).join(" ");
-
-const inputValue = ref("");
 const pressedLetters = ref<TrainerLetterProps[]>([]);
 
+const timerComponent = ref();
+const inputComponent = ref();
+
+const testStarted = ref(false);
 const keyDelta = ref(0);
 
 watchEffect(() => {
-  if (pressedLetters.value.length >= 110) {
-    const delta = 10;
+  const minimalLettersInDOM = 110;
+  const delta = 10;
+
+  if (pressedLetters.value.length >= minimalLettersInDOM) {
     pressedLetters.value.splice(0, delta);
     keyDelta.value += delta;
   }
-
-  if (inputValue.value.length <= 150) {
-    inputValue.value = inputValue.value + generateTypingWords(100).join(" ");
-  }
 });
-
-const testStarted = ref(false);
-
-const timerComponent = ref();
 
 const onStartTest = () => {
   testStarted.value = true;
@@ -43,55 +38,16 @@ const onTestTimeout = () => {
 
 const onRestartTest = () => {
   pressedLetters.value = [];
-  inputValue.value = initialValue;
+  inputComponent.value.onRestartTest();
   timerComponent.value.onResetTimer();
 };
 
-onMounted(() => {
-  inputValue.value = initialValue;
-});
-
-const onKeyDown = (event: KeyboardEvent) => {
-  const isForbidden =
-    event.key === "Delete" ||
-    event.key === "Escape" ||
-    event.key === "CapsLock" ||
-    event.key === "Tab" ||
-    event.key === "Shift" ||
-    event.altKey ||
-    event.ctrlKey ||
-    event.metaKey;
-  const isTrainerInInitialState =
-    !testStarted.value && !isForbidden && pressedLetters.value.length === 0;
-  const isInvalidCharacterPressed = testStarted.value && isForbidden;
-
-  if (isTrainerInInitialState) {
-    onStartTest();
-  } else if (isInvalidCharacterPressed || !testStarted.value) {
-    event.preventDefault();
-  }
+const onRemoveLetter = () => {
+  return pressedLetters.value.pop();
 };
 
-const onBeforeInput = (event: InputEvent) => {
-  const isBackspacePressed = event.inputType === "deleteContentBackward";
-
-  if (!event.data && !isBackspacePressed) {
-    event.preventDefault();
-    return;
-  } else if (isBackspacePressed) {
-    const char = pressedLetters.value.pop();
-    inputValue.value = char!.correctValue + inputValue.value;
-  }
-};
-
-const onInput = (pressedLetter: string | null) => {
-  const validLetter = inputValue.value[0];
-
-  pressedLetters.value.push({
-    value: pressedLetter ?? "",
-    correctValue: validLetter,
-  });
-  inputValue.value = inputValue.value.substring(1, inputValue.value.length);
+const onPush = (pressedLetter: TrainerLetterProps) => {
+  pressedLetters.value.push(pressedLetter);
 };
 </script>
 
@@ -101,7 +57,19 @@ const onInput = (pressedLetter: string | null) => {
       <h1 class="test__title">Typing speed test</h1>
       <h2 class="test__subtitle">Test your typing skills</h2>
 
-      <TrainerTimer ref="timerComponent" @timeout="onTestTimeout" />
+      <div class="test__info">
+        <TrainerTimer
+          class="test__timer"
+          ref="timerComponent"
+          @timeout="onTestTimeout"
+        />
+
+        <div class="test__metrics">
+          <TrainerMetric name="words/min" :value="0" />
+          <TrainerMetric name="chars/min" :value="0" />
+          <TrainerMetric name="% accuracy" :value="0" />
+        </div>
+      </div>
 
       <div class="test__trainer">
         <div class="test__letters">
@@ -114,11 +82,13 @@ const onInput = (pressedLetter: string | null) => {
         </div>
 
         <TrainerInput
+          ref="inputComponent"
           class="test__field"
-          :value="inputValue"
-          @input="onInput"
-          @beforeinput="onBeforeInput"
-          @keydown="onKeyDown"
+          :test-started="testStarted"
+          :dirty="!!pressedLetters.length"
+          :on-remove-letter="onRemoveLetter"
+          @push="onPush"
+          @start-test="onStartTest"
         />
 
         <TrainerTooltip
@@ -180,6 +150,22 @@ const onInput = (pressedLetter: string | null) => {
     line-height: 1.05;
     letter-spacing: -0.03em;
     margin-bottom: 1.5rem;
+  }
+
+  &__info {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 5rem;
+  }
+
+  &__timer {
+    margin-top: -1.5rem;
+  }
+
+  &__metrics {
+    display: flex;
+    gap: 10px;
   }
 
   &__trainer {

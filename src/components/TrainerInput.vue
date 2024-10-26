@@ -1,57 +1,117 @@
 <script setup lang="ts">
-import { ref, onMounted, onUpdated } from "vue";
+import { ref, onMounted, onUpdated, watchEffect } from "vue";
+import type { TrainerLetterProps } from "./TrainerLetter.vue";
+import { generateTypingWords } from "../utils";
 
 interface Props {
-  value: string;
+  testStarted: boolean;
+  dirty: boolean;
+  onRemoveLetter: () => TrainerLetterProps | undefined;
 }
 
 interface Emits {
-  (event: "keydown", value: KeyboardEvent): void;
-  (event: "beforeinput", value: InputEvent): void;
-  (event: "input", value: string | null): void;
+  (event: "startTest"): void;
+  (event: "push", payload: TrainerLetterProps): void;
 }
 
-defineProps<Props>();
+interface Expose {
+  onRestartTest: () => void;
+}
+
+const props = defineProps<Props>();
 
 const emit = defineEmits<Emits>();
 
-const inputNode = ref<HTMLInputElement>();
+const textToType = ref("");
+const node = ref<HTMLInputElement>();
 
 onMounted(() => {
-  inputNode.value?.setSelectionRange(0, 0);
+  textToType.value = generateTypingWords(100);
+  node.value?.setSelectionRange(0, 0);
 });
 
 onUpdated(() => {
-  inputNode.value?.setSelectionRange(0, 0);
+  node.value?.setSelectionRange(0, 0);
+});
+
+watchEffect(() => {
+  if (textToType.value.length <= 150) {
+    textToType.value = textToType.value + generateTypingWords(100);
+  }
 });
 
 const onKeyDown = (event: KeyboardEvent) => {
-  emit("keydown", event);
+  const isForbidden =
+    event.key === "Delete" ||
+    event.key === "Escape" ||
+    event.key === "CapsLock" ||
+    event.key === "Tab" ||
+    event.key === "Shift" ||
+    event.altKey ||
+    event.ctrlKey ||
+    event.metaKey;
+
+  const isTrainerInInitialState =
+    !props.testStarted && !isForbidden && !props.dirty;
+  const isInvalidCharacterPressed = props.testStarted && isForbidden;
+
+  if (isTrainerInInitialState) {
+    emit("startTest");
+  } else if (isInvalidCharacterPressed || !props.testStarted) {
+    event.preventDefault();
+  }
 };
 
 const onBeforeInput = (_event: Event) => {
   const event = _event as InputEvent;
-  emit("beforeinput", event);
+
+  const isBackspacePressed = event.inputType === "deleteContentBackward";
+
+  if (!event.data && !isBackspacePressed) {
+    event.preventDefault();
+    return;
+  } else if (isBackspacePressed) {
+    const char = props.onRemoveLetter();
+
+    if (char) {
+      textToType.value = char!.correctValue + textToType.value;
+    }
+  }
 };
 
 const onInput = (event: Event) => {
-  const pressedLetter = (event as InputEvent).data;
-  emit("input", pressedLetter);
+  const validLetter = textToType.value[0];
+
+  emit("push", {
+    value: (event as InputEvent).data ?? "",
+    correctValue: validLetter,
+  });
+
+  textToType.value = textToType.value.substring(1, textToType.value.length);
 };
+
+const onRestartTest = () => {
+  textToType.value = generateTypingWords(100);
+};
+
+defineExpose<Expose>({
+  onRestartTest,
+});
 </script>
 
 <template>
   <input
-    ref="inputNode"
+    ref="node"
     class="field"
+    type="text"
     autocomplete="off"
-    :value="value"
+    spellcheck="false"
+    :value="textToType"
     @input="onInput"
     @beforeinput="onBeforeInput"
     @keydown="onKeyDown"
     @paste.prevent=""
     @drop.prevent=""
-    type="text"
   />
 </template>
 

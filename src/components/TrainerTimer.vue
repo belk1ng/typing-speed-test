@@ -8,6 +8,7 @@ interface Props {
 interface Expose {
   onStartTimer: () => void;
   onResetTimer: () => void;
+  getCurrentTime: () => number;
 }
 
 interface Emits {
@@ -44,6 +45,10 @@ const onStopTimer = () => {
   clearInterval(interval.value);
 };
 
+const getCurrentTime = () => {
+  return props.seconds - time.value;
+};
+
 const onResetTimer = () => {
   onStopTimer();
   interval.value = undefined;
@@ -57,6 +62,7 @@ onUnmounted(() => {
 defineExpose<Expose>({
   onStartTimer,
   onResetTimer,
+  getCurrentTime,
 });
 </script>
 
