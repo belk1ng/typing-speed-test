@@ -23,6 +23,8 @@ const inputComponent = ref();
 const testStarted = ref(false);
 const keyDelta = ref(0);
 
+const testDurationSeconds = 60;
+
 watchEffect(() => {
   const minimalLettersInDOM = 110;
   const delta = 10;
@@ -51,19 +53,17 @@ watchEffect(() => {
 });
 
 const updateStatistics = () => {
-  const totalTime = timerComponent.value.getCurrentTime();
-  const totalWordsCount =
-    pressedLetters.value.filter(
-      (letter) => letter.value === " " && letter.correctValue === " "
-    ).length + 1;
+  const averageWordLength = 5;
+  const passedTimeInMinutes = (timerComponent.value.getCurrentTime() || 1) / 60;
 
-  const charsPerMinuteValue = (totalLettersCount.value / totalTime) * 60;
-  const wordsPerMinuteValue = (totalWordsCount / totalTime) * 60;
+  const charsPerMinuteValue = totalLettersCount.value / passedTimeInMinutes;
+  const grossWPM = charsPerMinuteValue / averageWordLength;
+
   const accuracyValue =
     (correctLettersCount.value / totalLettersCount.value) * 100;
 
   lettersPerMinute.value = charsPerMinuteValue;
-  wordsPerMinute.value = wordsPerMinuteValue;
+  wordsPerMinute.value = grossWPM;
   accuracy.value = accuracyValue;
 };
 
@@ -114,6 +114,7 @@ const onPush = (pressedLetter: TrainerLetterProps) => {
         <TrainerTimer
           class="test__timer"
           ref="timerComponent"
+          :seconds="testDurationSeconds"
           @timeout="onTestTimeout"
         />
 

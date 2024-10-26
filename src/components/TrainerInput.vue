@@ -28,6 +28,7 @@ const node = ref<HTMLInputElement>();
 onMounted(() => {
   textToType.value = generateTypingWords(50);
   node.value?.setSelectionRange(0, 0);
+  node.value?.focus();
 });
 
 onUpdated(() => {
