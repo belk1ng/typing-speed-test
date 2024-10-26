@@ -105,8 +105,10 @@ const onPush = (pressedLetter: TrainerLetterProps) => {
 <template>
   <main class="test">
     <section class="test__container">
-      <h1 class="test__title">Typing speed test</h1>
-      <h2 class="test__subtitle">Test your typing skills</h2>
+      <div>
+        <h1 class="test__title">Typing speed test</h1>
+        <h2 class="test__subtitle">Test your typing skills</h2>
+      </div>
 
       <div class="test__info">
         <TrainerTimer
@@ -199,7 +201,6 @@ const onPush = (pressedLetter: TrainerLetterProps) => {
     font-size: 45px;
     font-weight: 700;
     line-height: 1.05;
-    letter-spacing: -0.03em;
     margin-bottom: 1.5rem;
   }
 
@@ -226,7 +227,7 @@ const onPush = (pressedLetter: TrainerLetterProps) => {
     display: flex;
     align-items: center;
     height: 140px;
-    margin-block: 5rem;
+    margin-block: 3.5rem;
     border-radius: 0.5rem;
 
     background-color: #fff;
